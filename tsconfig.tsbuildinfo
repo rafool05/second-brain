@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/routes/apicall.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/middleware/auth.middleware.ts","./src/models/db.ts","./src/routes/apicall.ts","./src/types/types.ts"],"version":"5.8.3"}
