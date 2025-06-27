@@ -54,7 +54,7 @@ router.post("/signin",async(req,res)=>{
                     maxAge: 3600000
                 })
                 res.status(200).json({
-                    token,
+                    // token,
                     message : "Signed in Successfully"
                 })
             }
@@ -83,12 +83,21 @@ router.post("/content",auth,async (req,res)=>{
         )
         tagIds.push(tag._id)
     }
-    contModel.create({
-        type,content,title,tags : tagIds,userId,date : new Date()
-    })
-    res.json({
-        message : "Created Successfully"
-    })
+    try{
+
+        await contModel.create({
+            type,content,title,tags : tagIds,userId,date : new Date()
+        })
+        res.json({
+            message : "Created Successfully"
+        })
+    }
+    catch(e){
+        // console.log("Error found")
+        res.json({
+            message : "Error : " + e
+        })
+    }
 })
 router.get("/content",auth,async(req,res)=>{
     const content = await contModel.find({
@@ -98,35 +107,34 @@ router.get("/content",auth,async(req,res)=>{
 
 })
 router.post("/brain/share",auth,async(req,res)=>{
-    const share = req.body.share;
     const userId = req.body.userId;
-
-    if(share){
-        const linkExists = await linkModel.findOne({
-            userId
+    
+    const linkExists = await linkModel.findOne({
+        userId
+    })
+    if(linkExists){
+        res.status(200).json({
+            hash : linkExists.hash,
+            status : linkExists.status
         })
-        if(linkExists){
-            res.status(200).json({
-                hash : linkExists.hash
-            })
-            return;
-        }
-        let hash = randomizer(25)
-        await linkModel.create({
-            userId,
-            hash
-        })
-        res.json({
-            hash
-        })
+        return;
     }
+    let hash = randomizer(25)
+    await linkModel.create({
+        userId,
+        hash
+    })
+    res.status(200).json({
+        hash,
+        status : false
+    })
 })
 router.get("/brain/share/:shareLink", async(req,res)=>{
     const hash = req.params.shareLink;
     const link = await linkModel.findOne({
         hash 
     })
-    if(!link){
+    if(!link || link.status){
         res.status(411).json({
             message : "Invalid Link"
         })
@@ -146,6 +154,25 @@ router.get("/brain/share/:shareLink", async(req,res)=>{
         content 
     })
 
+})
+router.post("/brain/share/access",auth,async(req,res)=>{
+    const userId = req.body.userId;
+    const status = req.body.status;
+    const updatedDoc = await linkModel.findOneAndUpdate(
+        {userId},
+        {status},
+        {new : true}
+    )
+    if(!updatedDoc){
+        res.status(404).json({
+            message : "Invalid Link"
+        })
+        return;
+    }
+    res.json({
+        message : "Status updated successfully"
+    })
+    
 })
 router.delete("/content",auth,async(req,res)=>{
     try{

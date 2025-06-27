@@ -1,4 +1,5 @@
 import  { Types, Schema, Model, model } from 'mongoose'
+import { boolean } from 'zod';
 
 
 const userSchema = new Schema({
@@ -25,6 +26,7 @@ export const contModel = model( "Content",contentSchema)
 
 const linkSchema = new Schema({
     hash : {type : String, required : true},
-    userId : {type : Types.ObjectId, ref : "User", required : true}
+    userId : {type : Types.ObjectId, ref : "User", required : true},
+    status : {type : Boolean, default : false}
 })
 export const linkModel = model("Links",linkSchema)       
