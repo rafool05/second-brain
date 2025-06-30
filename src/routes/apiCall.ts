@@ -108,33 +108,38 @@ router.get("/content",auth,async(req,res)=>{
 })
 router.post("/brain/share",auth,async(req,res)=>{
     const userId = req.body.userId;
-    
-    const linkExists = await linkModel.findOne({
-        userId
-    })
-    if(linkExists){
-        res.status(200).json({
-            hash : linkExists.hash,
-            status : linkExists.status
-        })
-        return;
-    }
-    let hash = randomizer(25)
-    await linkModel.create({
-        userId,
-        hash
-    })
+    const status = req.body.status
+    // console.log(status)
+    const linkDoc = await linkModel.findOneAndUpdate(
+        { userId },
+        {
+            $setOnInsert: {
+                hash: randomizer(25),
+            },
+            $set:{
+                status
+            }
+        },
+        {
+            new: true,
+            upsert: true
+        }
+    );
+
     res.status(200).json({
-        hash,
-        status : false
+        message : "Link Shared Successfully",
+        status : linkDoc.status,
+        hash : linkDoc.hash,
+
     })
 })
 router.get("/brain/share/:shareLink", async(req,res)=>{
     const hash = req.params.shareLink;
+    // console.log(hash)
     const link = await linkModel.findOne({
         hash 
     })
-    if(!link || link.status){
+    if(!link || link.status === false){
         res.status(411).json({
             message : "Invalid Link"
         })
@@ -147,37 +152,18 @@ router.get("/brain/share/:shareLink", async(req,res)=>{
         })
         return;
     }
-    const content = contModel.find({
-        userId : userId
-    })
+    const content = await contModel.find({
+        userId
+    }).populate("tags","title")
     res.status(200).json({
         content 
     })
 
 })
-router.post("/brain/share/access",auth,async(req,res)=>{
-    const userId = req.body.userId;
-    const status = req.body.status;
-    const updatedDoc = await linkModel.findOneAndUpdate(
-        {userId},
-        {status},
-        {new : true}
-    )
-    if(!updatedDoc){
-        res.status(404).json({
-            message : "Invalid Link"
-        })
-        return;
-    }
-    res.json({
-        message : "Status updated successfully"
-    })
-    
-})
 router.delete("/content",auth,async(req,res)=>{
     try{
 
-        const delRes = await contModel.deleteOne({
+        await contModel.deleteOne({
             _id : req.body._id
         })
         res.status(200).send({
