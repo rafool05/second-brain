@@ -30,7 +30,16 @@ Second Brain is a note-taking website that quickly stores tweets, YouTube videos
 * **Authentication:** JWT-based Auth
 
 ---
+## 🧩 Prerequisites
+Make sure you have the following installed on your system:
 
+* Node.js (v18 or later recommended)
+
+* npm (comes with Node.js)
+
+* Git
+  
+---
 ## 🚀 Setup Instructions
 
 This project is split into **two separate repositories**: frontend and backend.
